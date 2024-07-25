@@ -1,0 +1,1 @@
+from src.app.api.quiz.endpoints import generate_quiz as generate_quiz_url

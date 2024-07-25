@@ -1,0 +1,11 @@
+fastapi
+uvicorn
+py-eureka-client
+python-dotenv
+pydantic
+sqlalchemy
+langchain
+pypdf
+sentence-transformers
+faiss-cpu
+aiofiles
