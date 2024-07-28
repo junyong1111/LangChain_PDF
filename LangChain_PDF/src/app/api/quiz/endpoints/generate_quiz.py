@@ -12,11 +12,11 @@ async def health_check():
 
 
 @router.post("/upload-pdf")
-async def upload_pdf(
+async def store_pdf_to_faiss(
         file: UploadFile = File(...),
 ):
     try:
-        result = await PDFService.save_pdf(file)
+        result = await PDFService.store_pdf_to_faiss(file)
         return JSONResponse(content={
             "message": "PDF upload successful. Processing started in background.",
             "file_id": result["file_id"]

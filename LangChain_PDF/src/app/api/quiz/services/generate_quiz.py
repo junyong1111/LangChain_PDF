@@ -1,20 +1,10 @@
-import os
-import uuid
-import json
-from fastapi import UploadFile
-from langchain_community.document_loaders import PyPDFLoader
-from langchain_huggingface import HuggingFaceEmbeddings
-from langchain_community.vectorstores import FAISS
-from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain_community.llms import OpenAI
-from langchain.chains import LLMChain
-from langchain.prompts import PromptTemplate
-import asyncio
+
 import logging
-from datetime import datetime, timedelta
-import aiofiles
-import hashlib
 from dotenv import load_dotenv
+from src.common.utils.pdf_reader import upload_pdf
+from src.common.utils.text_split import chunk_text
+from src.common.utils.text_to_embedding import text_to_embedding
+from src.common.utils.vector_store import store_embedding_to_faiss
 
 load_dotenv()
 
@@ -22,28 +12,13 @@ logger = logging.getLogger(__name__)
 
 class PDFService:
     @staticmethod
-    async def save_pdf(self, file: UploadFile):
+    async def store_pdf_to_faiss(file_path):
         try:
-            file_id = str(uuid.uuid4())
-            file_name = f"{file_id}_{file.filename}"
-            file_location = os.path.join(self.UPLOAD_DIRECTORY, file_name)
-
-            logger.info(f"Attempting to save file: {file_name}")
-            async with aiofiles.open(file_location, "wb") as out_file:
-                content = await file.read()
-                await out_file.write(content)
-
-            logger.info(f"PDF saved successfully: {file_id} at location: {file_location}")
-
-            self.processing_status[file_id] = "Uploaded"
-            self.update_status_expiry(file_id)
-            self.save_status_info()
-            logger.info(f"Status updated for file_id: {file_id}. Status: Uploaded")
-
-            logger.info(f"Starting background processing for file_id: {file_id}")
-            asyncio.create_task(self.process_pdf(file_location, file_id))
-
-            return {"file_id": file_id, "file_location": file_location}
-        except Exception as e:
-            logger.error(f"Error saving PDF: {str(e)}")
-            raise
+            # -- Spdf 업로드
+            documents = await upload_pdf(file_path)
+            # -- 청크 단위로 분할
+            docs = await chunk_text(documents)
+            embeddings = await text_to_embedding()
+            await store_embedding_to_faiss(docs=docs, embeddings=embeddings)
+        except(Exception) as e:
+            raise Exception(f"{file_path.store_pdf_to_faiss.__name__} function raise exception about : {str(e)}") from e
